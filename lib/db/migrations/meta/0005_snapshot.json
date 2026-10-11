@@ -1,0 +1,1216 @@
+{
+  "id": "b7b60334-0e1f-4e1f-9847-342feb4eea0d",
+  "prevId": "8cd146b7-19fb-49e2-9fda-07367a152bd3",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.discord_bot_users": {
+      "name": "discord_bot_users",
+      "schema": "",
+      "columns": {
+        "discord_user_id": {
+          "name": "discord_user_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "total_voice_time_seconds": {
+          "name": "total_voice_time_seconds",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "current_milestone": {
+          "name": "current_milestone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "claimed_milestones": {
+          "name": "claimed_milestones",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "ARRAY[]::text[]"
+        },
+        "total_xp": {
+          "name": "total_xp",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "discord_bot_users_voice_time_nonnegative": {
+          "name": "discord_bot_users_voice_time_nonnegative",
+          "value": "\"discord_bot_users\".\"total_voice_time_seconds\" >= 0"
+        },
+        "discord_bot_users_xp_nonnegative": {
+          "name": "discord_bot_users_xp_nonnegative",
+          "value": "\"discord_bot_users\".\"total_xp\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.discord_bot_voice_sessions": {
+      "name": "discord_bot_voice_sessions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "discord_bot_voice_sessions_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "discord_user_id": {
+          "name": "discord_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "voice_channel_id": {
+          "name": "voice_channel_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "active": {
+          "name": "active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "ended_at": {
+          "name": "ended_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_seen_at": {
+          "name": "last_seen_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "discord_bot_voice_sessions_user_started_idx": {
+          "name": "discord_bot_voice_sessions_user_started_idx",
+          "columns": [
+            {
+              "expression": "discord_user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "started_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "discord_bot_one_active_voice_session_per_user_idx": {
+          "name": "discord_bot_one_active_voice_session_per_user_idx",
+          "columns": [
+            {
+              "expression": "discord_user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"discord_bot_voice_sessions\".\"active\" = true",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "discord_bot_voice_sessions_discord_user_id_discord_bot_users_discord_user_id_fk": {
+          "name": "discord_bot_voice_sessions_discord_user_id_discord_bot_users_discord_user_id_fk",
+          "tableFrom": "discord_bot_voice_sessions",
+          "tableTo": "discord_bot_users",
+          "columnsFrom": [
+            "discord_user_id"
+          ],
+          "columnsTo": [
+            "discord_user_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "discord_bot_voice_sessions_end_state_consistency": {
+          "name": "discord_bot_voice_sessions_end_state_consistency",
+          "value": "(\"discord_bot_voice_sessions\".\"active\" = true AND \"discord_bot_voice_sessions\".\"ended_at\" IS NULL) OR (\"discord_bot_voice_sessions\".\"active\" = false AND \"discord_bot_voice_sessions\".\"ended_at\" IS NOT NULL)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.discord_bot_user_milestones": {
+      "name": "discord_bot_user_milestones",
+      "schema": "",
+      "columns": {
+        "discord_user_id": {
+          "name": "discord_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "milestone_id": {
+          "name": "milestone_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "required_voice_time_seconds": {
+          "name": "required_voice_time_seconds",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role_id": {
+          "name": "role_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "currency_reward_amount": {
+          "name": "currency_reward_amount",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reached_at": {
+          "name": "reached_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "role_status": {
+          "name": "role_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "role_granted_at": {
+          "name": "role_granted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reward_status": {
+          "name": "reward_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "reward_processing_at": {
+          "name": "reward_processing_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reward_attempts": {
+          "name": "reward_attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "claimed_at": {
+          "name": "claimed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reward_last_error": {
+          "name": "reward_last_error",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "discord_bot_user_milestones_reward_status_idx": {
+          "name": "discord_bot_user_milestones_reward_status_idx",
+          "columns": [
+            {
+              "expression": "reward_status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "reward_processing_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "discord_bot_user_milestones_user_fk": {
+          "name": "discord_bot_user_milestones_user_fk",
+          "tableFrom": "discord_bot_user_milestones",
+          "tableTo": "discord_bot_users",
+          "columnsFrom": [
+            "discord_user_id"
+          ],
+          "columnsTo": [
+            "discord_user_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "discord_bot_user_milestones_pk": {
+          "name": "discord_bot_user_milestones_pk",
+          "columns": [
+            "discord_user_id",
+            "milestone_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "discord_bot_user_milestones_required_time_nonnegative": {
+          "name": "discord_bot_user_milestones_required_time_nonnegative",
+          "value": "\"discord_bot_user_milestones\".\"required_voice_time_seconds\" >= 0"
+        },
+        "discord_bot_user_milestones_reward_nonnegative": {
+          "name": "discord_bot_user_milestones_reward_nonnegative",
+          "value": "\"discord_bot_user_milestones\".\"currency_reward_amount\" IS NULL OR \"discord_bot_user_milestones\".\"currency_reward_amount\" >= 0"
+        },
+        "discord_bot_user_milestones_role_status_valid": {
+          "name": "discord_bot_user_milestones_role_status_valid",
+          "value": "\"discord_bot_user_milestones\".\"role_status\" IN ('pending', 'granted', 'superseded', 'unconfigured', 'missing', 'member_not_found', 'failed')"
+        },
+        "discord_bot_user_milestones_reward_status_valid": {
+          "name": "discord_bot_user_milestones_reward_status_valid",
+          "value": "\"discord_bot_user_milestones\".\"reward_status\" IN ('pending', 'processing', 'deferred', 'issued', 'failed')"
+        },
+        "discord_bot_user_milestones_reward_attempts_nonnegative": {
+          "name": "discord_bot_user_milestones_reward_attempts_nonnegative",
+          "value": "\"discord_bot_user_milestones\".\"reward_attempts\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.discord_bot_milestone_settings": {
+      "name": "discord_bot_milestone_settings",
+      "schema": "",
+      "columns": {
+        "milestone_id": {
+          "name": "milestone_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "required_voice_time_seconds": {
+          "name": "required_voice_time_seconds",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "role_id": {
+          "name": "role_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.discord_bot_wallets": {
+      "name": "discord_bot_wallets",
+      "schema": "",
+      "columns": {
+        "discord_user_id": {
+          "name": "discord_user_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "balance": {
+          "name": "balance",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "discord_bot_wallets_balance_idx": {
+          "name": "discord_bot_wallets_balance_idx",
+          "columns": [
+            {
+              "expression": "balance",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "discord_bot_wallets_balance_nonnegative": {
+          "name": "discord_bot_wallets_balance_nonnegative",
+          "value": "\"discord_bot_wallets\".\"balance\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.discord_bot_wallet_transactions": {
+      "name": "discord_bot_wallet_transactions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "discord_bot_wallet_transactions_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "discord_user_id": {
+          "name": "discord_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "amount": {
+          "name": "amount",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "balance_after": {
+          "name": "balance_after",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "idempotency_key": {
+          "name": "idempotency_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "discord_bot_wallet_transactions_idempotency_key_idx": {
+          "name": "discord_bot_wallet_transactions_idempotency_key_idx",
+          "columns": [
+            {
+              "expression": "idempotency_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "discord_bot_wallet_transactions_user_idx": {
+          "name": "discord_bot_wallet_transactions_user_idx",
+          "columns": [
+            {
+              "expression": "discord_user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "discord_bot_wallet_transactions_amount_nonzero": {
+          "name": "discord_bot_wallet_transactions_amount_nonzero",
+          "value": "\"discord_bot_wallet_transactions\".\"amount\" <> 0"
+        },
+        "discord_bot_wallet_transactions_balance_after_nonnegative": {
+          "name": "discord_bot_wallet_transactions_balance_after_nonnegative",
+          "value": "\"discord_bot_wallet_transactions\".\"balance_after\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.discord_bot_economy_claims": {
+      "name": "discord_bot_economy_claims",
+      "schema": "",
+      "columns": {
+        "discord_user_id": {
+          "name": "discord_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "claim_type": {
+          "name": "claim_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_claimed_at": {
+          "name": "last_claimed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "claim_count": {
+          "name": "claim_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "discord_bot_economy_claims_pk": {
+          "name": "discord_bot_economy_claims_pk",
+          "columns": [
+            "discord_user_id",
+            "claim_type"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "discord_bot_economy_claims_type_valid": {
+          "name": "discord_bot_economy_claims_type_valid",
+          "value": "\"discord_bot_economy_claims\".\"claim_type\" IN ('work', 'daily')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.discord_bot_voice_reward_checkpoints": {
+      "name": "discord_bot_voice_reward_checkpoints",
+      "schema": "",
+      "columns": {
+        "discord_user_id": {
+          "name": "discord_user_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "credited_seconds": {
+          "name": "credited_seconds",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "total_paid": {
+          "name": "total_paid",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "discord_bot_voice_reward_checkpoints_credited_nonnegative": {
+          "name": "discord_bot_voice_reward_checkpoints_credited_nonnegative",
+          "value": "\"discord_bot_voice_reward_checkpoints\".\"credited_seconds\" >= 0"
+        },
+        "discord_bot_voice_reward_checkpoints_paid_nonnegative": {
+          "name": "discord_bot_voice_reward_checkpoints_paid_nonnegative",
+          "value": "\"discord_bot_voice_reward_checkpoints\".\"total_paid\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.discord_bot_casino_games": {
+      "name": "discord_bot_casino_games",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "discord_user_id": {
+          "name": "discord_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "game_type": {
+          "name": "game_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "wager": {
+          "name": "wager",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "state": {
+          "name": "state",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'active'"
+        },
+        "outcome": {
+          "name": "outcome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payout": {
+          "name": "payout",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "channel_id": {
+          "name": "channel_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "settled_at": {
+          "name": "settled_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "discord_bot_casino_games_one_active_per_user_idx": {
+          "name": "discord_bot_casino_games_one_active_per_user_idx",
+          "columns": [
+            {
+              "expression": "discord_user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {},
+          "where": "\"discord_bot_casino_games\".\"status\" = 'active'"
+        },
+        "discord_bot_casino_games_status_expires_idx": {
+          "name": "discord_bot_casino_games_status_expires_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "discord_bot_casino_games_type_valid": {
+          "name": "discord_bot_casino_games_type_valid",
+          "value": "\"discord_bot_casino_games\".\"game_type\" IN ('mines', 'appletower', 'blackjack')"
+        },
+        "discord_bot_casino_games_status_valid": {
+          "name": "discord_bot_casino_games_status_valid",
+          "value": "\"discord_bot_casino_games\".\"status\" IN ('active', 'settled')"
+        },
+        "discord_bot_casino_games_wager_positive": {
+          "name": "discord_bot_casino_games_wager_positive",
+          "value": "\"discord_bot_casino_games\".\"wager\" > 0"
+        },
+        "discord_bot_casino_games_payout_nonnegative": {
+          "name": "discord_bot_casino_games_payout_nonnegative",
+          "value": "\"discord_bot_casino_games\".\"payout\" IS NULL OR \"discord_bot_casino_games\".\"payout\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.discord_bot_economy_settings": {
+      "name": "discord_bot_economy_settings",
+      "schema": "",
+      "columns": {
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.discord_bot_shop_items": {
+      "name": "discord_bot_shop_items",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "role_id": {
+          "name": "role_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "price": {
+          "name": "price",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "color": {
+          "name": "color",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "archived_at": {
+          "name": "archived_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "discord_bot_shop_items_active_role_idx": {
+          "name": "discord_bot_shop_items_active_role_idx",
+          "columns": [
+            {
+              "expression": "role_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {},
+          "where": "\"discord_bot_shop_items\".\"archived_at\" IS NULL"
+        },
+        "discord_bot_shop_items_sort_idx": {
+          "name": "discord_bot_shop_items_sort_idx",
+          "columns": [
+            {
+              "expression": "sort_order",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "price",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "discord_bot_shop_items_price_positive": {
+          "name": "discord_bot_shop_items_price_positive",
+          "value": "\"discord_bot_shop_items\".\"price\" > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.discord_bot_shop_purchases": {
+      "name": "discord_bot_shop_purchases",
+      "schema": "",
+      "columns": {
+        "discord_user_id": {
+          "name": "discord_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "item_id": {
+          "name": "item_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "price_paid": {
+          "name": "price_paid",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "purchased_at": {
+          "name": "purchased_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "discord_bot_shop_purchases_item_idx": {
+          "name": "discord_bot_shop_purchases_item_idx",
+          "columns": [
+            {
+              "expression": "item_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "discord_bot_shop_purchases_pk": {
+          "name": "discord_bot_shop_purchases_pk",
+          "columns": [
+            "discord_user_id",
+            "item_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "discord_bot_shop_purchases_price_nonnegative": {
+          "name": "discord_bot_shop_purchases_price_nonnegative",
+          "value": "\"discord_bot_shop_purchases\".\"price_paid\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.discord_bot_weekly_tasks": {
+      "name": "discord_bot_weekly_tasks",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "goal_seconds": {
+          "name": "goal_seconds",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reward": {
+          "name": "reward",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "starts_at": {
+          "name": "starts_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ends_at": {
+          "name": "ends_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "channel_id": {
+          "name": "channel_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "message_id": {
+          "name": "message_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'active'"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "discord_bot_weekly_tasks_status_idx": {
+          "name": "discord_bot_weekly_tasks_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "ends_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "discord_bot_weekly_tasks_goal_positive": {
+          "name": "discord_bot_weekly_tasks_goal_positive",
+          "value": "\"discord_bot_weekly_tasks\".\"goal_seconds\" > 0"
+        },
+        "discord_bot_weekly_tasks_reward_positive": {
+          "name": "discord_bot_weekly_tasks_reward_positive",
+          "value": "\"discord_bot_weekly_tasks\".\"reward\" > 0"
+        },
+        "discord_bot_weekly_tasks_window_valid": {
+          "name": "discord_bot_weekly_tasks_window_valid",
+          "value": "\"discord_bot_weekly_tasks\".\"ends_at\" > \"discord_bot_weekly_tasks\".\"starts_at\""
+        },
+        "discord_bot_weekly_tasks_status_valid": {
+          "name": "discord_bot_weekly_tasks_status_valid",
+          "value": "\"discord_bot_weekly_tasks\".\"status\" IN ('active', 'ended')"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

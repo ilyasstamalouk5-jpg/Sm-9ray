@@ -1,0 +1,55 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1791485879398,
+      "tag": "0000_init_discord_bot",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791572279398,
+      "tag": "0001_add_voice_session_heartbeat",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791658679398,
+      "tag": "0002_add_milestone_settings",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791745079398,
+      "tag": "0003_add_economy",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791831479398,
+      "tag": "0004_add_color_shop",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791917879398,
+      "tag": "0005_add_weekly_tasks",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792004279398,
+      "tag": "0006_add_seasons",
+      "breakpoints": true
+    }
+  ]
+}
