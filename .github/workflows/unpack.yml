@@ -1,0 +1,53 @@
+name: unpack
+
+on:
+  push:
+    paths:
+      - "*.zip"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Unzip, commit and remove the zip
+        run: |
+          shopt -s nullglob
+          zips=(*.zip)
+          if [ ${#zips[@]} -eq 0 ]; then
+            echo "No zip in the repo root, nothing to do."
+            exit 0
+          fi
+
+          for z in "${zips[@]}"; do
+            rm -rf /tmp/unpack && mkdir /tmp/unpack
+            unzip -q "$z" -d /tmp/unpack
+
+            # If the zip holds one top-level folder, use what's inside it
+            shopt -s dotglob
+            entries=(/tmp/unpack/*)
+            if [ ${#entries[@]} -eq 1 ] && [ -d "${entries[0]}" ]; then
+              src="${entries[0]}"
+            else
+              src=/tmp/unpack
+            fi
+
+            cp -a "$src"/. .
+            git rm -q --cached "$z" || true
+            rm -f "$z"
+          done
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes."
+          else
+            git commit -m "Unpack uploaded zip"
+            git push
+          fi
